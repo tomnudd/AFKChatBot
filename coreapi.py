@@ -62,8 +62,6 @@ class EchoBot(Client):
             if len(calendar()) > 0:
                 self.send(fbchat.Message(text="Please stop talking to me"), thread_id=thread_id, thread_type=thread_type)
 
-client = EchoBot("NIL", "NIL")
-client.listen()
-
-if __name__ == '__main__':
-    calendar()
+def start(email, password):
+    client = EchoBot(email, password)
+    client.listen()

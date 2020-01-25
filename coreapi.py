@@ -63,5 +63,5 @@ class EchoBot(Client):
                 self.send(fbchat.Message(text="Please stop talking to me"), thread_id=thread_id, thread_type=thread_type)
 
 def start(email, password):
-    client = EchoBot("NIL", "NIL")
+    client = EchoBot(email, password)
     client.listen()

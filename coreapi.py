@@ -93,14 +93,16 @@ class EchoBot(Client):
                 if author_id not in seen_users:
                     joke = randomJoke()
                     if message_object.text and "bot" in message_object.text.lower():
+                        joke = ""
                         self.send(fbchat.Message(text="Hi, how are you?"), thread_id=thread_id, thread_type=thread_type)
                     elif author_id not in spoken_to:
+                        joke = ""
                         self.send(fbchat.Message(text="Sorry! I am busy with event: " + str(output[0]) + ". Say \"bot\" to talk to the bot! For any question you might ask..."), thread_id=thread_id, thread_type=thread_type)
                         self.sendLocalImage("onandoff.gif", thread_id=thread_id, thread_type=thread_type)
-
                         spoken_to.add(author_id)
                     else:
                         self.send(fbchat.Message(text="Say \"bot\" to talk to the bot! " + joke), thread_id=thread_id, thread_type=thread_type)
+
                     if joke == "How about a magic trick?":
                         self.sendLocalImage("yeet.gif", thread_id=thread_id, thread_type=thread_type)
                     elif joke == "Have a look at this absolute fluffer!":

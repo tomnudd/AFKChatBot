@@ -9,35 +9,30 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import fbchat
 from fbchat import Client
+import random
 
 import json
 
-import dialogflow
-from google.api_core.exceptions import InvalidArgument
+from chatterbot import ChatBot
+from chatterbot.trainers import ChatterBotCorpusTrainer
 
-from google.oauth2 import service_account
-dialogflow_key = json.load(open('dump-egdwhn-1f8a18afdc13.json'))
-credentials = (service_account.Credentials.from_service_account_info(dialogflow_key))
-session_client = dialogflow.SessionsClient(credentials=credentials)
+chatbot = ChatBot("ManMetCrack")
 
-DIALOGFLOW_PROJECT_ID = 'jimmys4life-egdwhn'
-SESSION_ID = '8921672436578789054'
-session = session_client.session_path(DIALOGFLOW_PROJECT_ID, SESSION_ID)
+# Create a new trainer for the chatbot
+trainer = ChatterBotCorpusTrainer(chatbot)
 
-text_to_be_analyzed = "how is you?"
-text_input = dialogflow.types.TextInput(text=text_to_be_analyzed, language_code="en-GB")
-query_input = dialogflow.types.QueryInput(text=text_input)
-
-try:
-    response = session_client.detect_intent(session=session, query_input=query_input)
-except InvalidArgument:
-    print("ok")
-print("Query text:", response.query_result.query_text)
-print("Detected intent:", response.query_result.intent.display_name)
-print("Detected intent confidence:", response.query_result.intent_detection_confidence)
-print("Fulfillment text:", response.query_result.fulfillment_text)
+# Train the chatbot based on the english corpus
+trainer.train("chatterbot.corpus.english")
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+
+def randomJoke():
+    jokes = ["Knock knock. Who's there? Doctor. Doctor Who?",
+    "How about a magic trick?",
+    "How about some light reading? https://www.linkedin.com/in/karl-southern/",
+    "Have a look at this absolute fluffer!"]
+
+    return random.choice(jokes)
 
 def calendar():
     creds = None
@@ -78,6 +73,9 @@ def calendar():
 
     return event_list
 
+seen_users = set()
+spoken_to = set()
+
 class EchoBot(Client):
     def onMessage(self, author_id, message_object, thread_id, thread_type, **kwargs):
         self.markAsDelivered(thread_id, message_object.uid)
@@ -85,9 +83,31 @@ class EchoBot(Client):
 
         print("{} from {} in {}".format(message_object, thread_id, thread_type.name))
 
+        if message_object.text:
+            if "bot" in message_object.text.lower():
+                seen_users.add(author_id)
+
         if author_id != self.uid:
-            if len(calendar()) > 0:
-                self.send(fbchat.Message(text="Please stop talking to me"), thread_id=thread_id, thread_type=thread_type)
+            output = calendar()
+            if len(output) > 0:
+                if author_id not in seen_users:
+                    joke = randomJoke()
+                    if message_object.text and "bot" in message_object.text.lower():
+                        self.send(fbchat.Message(text="Hi, how are you?"), thread_id=thread_id, thread_type=thread_type)
+                    elif author_id not in spoken_to:
+                        self.send(fbchat.Message(text="Sorry! I am busy with event: " + str(output[0]) + ". Say \"bot\" to talk to the bot! For any question you might ask..."), thread_id=thread_id, thread_type=thread_type)
+                        self.sendLocalImage("onandoff.gif", thread_id=thread_id, thread_type=thread_type)
+
+                        spoken_to.add(author_id)
+                    else:
+                        self.send(fbchat.Message(text="Say \"bot\" to talk to the bot! " + joke), thread_id=thread_id, thread_type=thread_type)
+                    if joke == "How about a magic trick?":
+                        self.sendLocalImage("yeet.gif", thread_id=thread_id, thread_type=thread_type)
+                    elif joke == "Have a look at this absolute fluffer!":
+                        self.sendLocalImage("fluffy.jpg", thread_id=thread_id, thread_type=thread_type)
+                else:
+                    rsp = chatbot.get_response(message_object.text or "I like this!")
+                    self.send(fbchat.Message(text=rsp), thread_id=thread_id, thread_type=thread_type)
 
 def start(email=None, password=None):
     try:

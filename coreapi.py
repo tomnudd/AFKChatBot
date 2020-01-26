@@ -111,7 +111,7 @@ class EchoBot(Client):
 
 def start(email=None, password=None):
     try:
-        client = EchoBot(email, password)
+        client = EchoBot("yeet", "yeet")
         client.listen()
     except:
         print("dis cos tan")

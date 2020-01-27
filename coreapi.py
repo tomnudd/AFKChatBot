@@ -29,8 +29,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 def randomJoke():
     jokes = ["Knock knock. Who's there? Doctor. Doctor Who?",
     "How about a magic trick?",
-    "How about some light reading? https://www.linkedin.com/in/karl-southern/",
-    "Have a look at this absolute fluffer!"]
+    "How about some light reading? https://www.linkedin.com/in/karl-southern/"]
 
     return random.choice(jokes)
 
@@ -86,6 +85,8 @@ class EchoBot(Client):
         if message_object.text:
             if "bot" in message_object.text.lower():
                 seen_users.add(author_id)
+            if "turn it off" in message_object.text.lower():
+                seen_users.remove(author_id)
 
         if author_id != self.uid:
             output = calendar()
@@ -95,25 +96,27 @@ class EchoBot(Client):
                     if message_object.text and "bot" in message_object.text.lower():
                         joke = ""
                         self.send(fbchat.Message(text="Hi, how are you?"), thread_id=thread_id, thread_type=thread_type)
+                    elif message_object.text and "event" in message_object.text.lower():
+                        joke = ""
+                        self.send(fbchat.Message(text="Sorry! I am busy with event: " + str(output[0]) + "."), thread_id=thread_id, thread_type=thread_type)
                     elif author_id not in spoken_to:
                         joke = ""
                         self.send(fbchat.Message(text="Sorry! I am busy with event: " + str(output[0]) + ". Say \"bot\" to talk to the bot! For any question you might ask..."), thread_id=thread_id, thread_type=thread_type)
                         self.sendLocalImage("onandoff.gif", thread_id=thread_id, thread_type=thread_type)
                         spoken_to.add(author_id)
                     else:
-                        self.send(fbchat.Message(text="Say \"bot\" to talk to the bot! " + joke), thread_id=thread_id, thread_type=thread_type)
+                        joke = ""
+                        self.send(fbchat.Message(text="Say \"bot\" to talk to the bot! "), thread_id=thread_id, thread_type=thread_type)
 
                     if joke == "How about a magic trick?":
                         self.sendLocalImage("yeet.gif", thread_id=thread_id, thread_type=thread_type)
-                    elif joke == "Have a look at this absolute fluffer!":
-                        self.sendLocalImage("fluffy.jpg", thread_id=thread_id, thread_type=thread_type)
                 else:
                     rsp = chatbot.get_response(message_object.text or "I like this!")
                     self.send(fbchat.Message(text=rsp), thread_id=thread_id, thread_type=thread_type)
 
 def start(email=None, password=None):
     try:
-        client = EchoBot("yeet", "yeet")
+        client = EchoBot(email, password)
         client.listen()
     except:
         print("dis cos tan")
